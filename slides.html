@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building Faster with AI | NASA Space Apps Workshop</title>
+    
+    <!-- OpenGraph & Social Preview Meta Tags for GitHub Pages Sharing -->
+    <meta property="og:title" content="Building Faster with AI | NASA Space Apps Workshop">
+    <meta property="og:description" content="AI-Assisted Prototyping, Scripting & Vibe Coding for NASA Space Apps Hackathons. 30-min masterclass with live interactive simulations.">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="theme-color" content="#040711">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
+
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #040711;
+            --card-bg: rgba(13, 20, 39, 0.88);
+            --border-glow: rgba(0, 240, 255, 0.35);
+            --cyan: #00f0ff;
+            --blue-nasa: #0b3d91;
+            --red-nasa: #fc3d21;
+            --purple-ai: #a855f7;
+            --green: #10b981;
+            --amber: #f59e0b;
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-light);
+            font-family: 'Rajdhani', sans-serif;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            user-select: none;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            height: 52px;
+            background: rgba(10, 15, 30, 0.95);
+            border-bottom: 1px solid var(--border-glow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 100;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .badge-red {
+            background: var(--red-nasa);
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
+            font-weight: 900;
+            padding: 3px 8px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+        }
+
+        .presentation-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 13px;
+            letter-spacing: 1.2px;
+            color: var(--text-light);
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .session-timer {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--cyan);
+            background: rgba(0, 240, 255, 0.1);
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1px solid rgba(0, 240, 255, 0.3);
+        }
+
+        .btn-hub {
+            background: linear-gradient(90deg, rgba(0, 240, 255, 0.2), rgba(168, 85, 247, 0.3));
+            border: 1px solid var(--cyan);
+            color: #fff;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-hub:hover {
+            background: var(--cyan);
+            color: #040711;
+            box-shadow: 0 0 12px var(--cyan);
+        }
+
+        .notes-btn {
+            background: rgba(168, 85, 247, 0.2);
+            border: 1px solid var(--purple-ai);
+            color: #d8b4fe;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .notes-btn:hover {
+            background: var(--purple-ai);
+            color: #fff;
+        }
+
+        /* Slide Stage */
+        .slide-stage {
+            flex: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px 36px;
+            background: radial-gradient(circle at 50% 30%, #0d1a38 0%, #040711 80%);
+            touch-action: pan-y;
+        }
+
+        .slide {
+            display: none;
+            width: 100%;
+            max-width: 1150px;
+            height: calc(100vh - 120px);
+            max-height: 680px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-glow);
+            border-radius: 16px;
+            padding: 32px 42px;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7);
+            flex-direction: column;
+            justify-content: space-between;
+            animation: fadeIn 0.25s ease-out;
+            position: relative;
+            overflow-y: auto;
+        }
+
+        .slide.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .slide-header {
+            margin-bottom: 16px;
+        }
+
+        .slide-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--cyan);
+            letter-spacing: 2px;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 26px;
+            letter-spacing: 1.5px;
+            color: #fff;
+            text-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+        }
+
+        .slide-subtitle {
+            font-size: 15px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            flex: 1;
+            align-items: stretch;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            flex: 1;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .card:hover {
+            border-color: var(--cyan);
+            background: rgba(0, 240, 255, 0.04);
+        }
+
+        .card h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 15px;
+            color: var(--cyan);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card p, .card li {
+            font-size: 14.5px;
+            color: #cbd5e1;
+            line-height: 1.5;
+        }
+
+        ul.feature-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        ul.feature-list li {
+            position: relative;
+            padding-left: 18px;
+        }
+
+        ul.feature-list li::before {
+            content: "▹";
+            position: absolute;
+            left: 0;
+            color: var(--cyan);
+            font-weight: bold;
+        }
+
+        /* Tables */
+        table.matrix-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+            margin-top: 8px;
+        }
+
+        table.matrix-table th {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11.5px;
+            color: var(--cyan);
+            text-align: left;
+            padding: 8px 10px;
+            border-bottom: 2px solid var(--border-glow);
+            background: rgba(0, 240, 255, 0.05);
+        }
+
+        table.matrix-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            color: #e2e8f0;
+        }
+
+        table.matrix-table tr:hover td {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+        }
+        .tag-best { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; }
+        .tag-good { background: rgba(56, 189, 248, 0.2); color: #7dd3fc; border: 1px solid #0284c7; }
+        .tag-caution { background: rgba(245, 158, 11, 0.2); color: #fcd34d; border: 1px solid #d97706; }
+
+        pre {
+            background: #090e1f;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11.5px;
+            color: #a5f3fc;
+            overflow-x: auto;
+            line-height: 1.4;
+        }
+
+        .demo-btn-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(90deg, #0284c7, #00f0ff);
+            color: #040711;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 12px;
+            padding: 9px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            box-shadow: 0 0 12px rgba(0, 240, 255, 0.4);
+            margin-top: 8px;
+        }
+
+        .demo-btn-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 22px rgba(0, 240, 255, 0.8);
+        }
+
+        /* Speaker Notes Drawer */
+        .notes-drawer {
+            display: none;
+            position: absolute;
+            bottom: 58px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 1050px;
+            background: rgba(15, 23, 42, 0.98);
+            border: 2px solid var(--purple-ai);
+            border-radius: 12px;
+            padding: 16px 22px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+            z-index: 200;
+        }
+
+        .notes-drawer.open {
+            display: block;
+        }
+
+        .notes-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11.5px;
+            color: #d8b4fe;
+            margin-bottom: 6px;
+            letter-spacing: 1px;
+        }
+
+        .notes-text {
+            font-size: 13.5px;
+            color: #f1f5f9;
+            line-height: 1.5;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        /* Resource Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            z-index: 500;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal-box {
+            width: 90%;
+            max-width: 780px;
+            background: #0b1124;
+            border: 2px solid var(--cyan);
+            border-radius: 16px;
+            padding: 24px 30px;
+            box-shadow: 0 0 40px rgba(0, 240, 255, 0.35);
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0, 240, 255, 0.3);
+            padding-bottom: 12px;
+            margin-bottom: 18px;
+        }
+
+        .modal-header h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            color: #fff;
+            letter-spacing: 1.5px;
+        }
+
+        .btn-close {
+            background: none;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #cbd5e1;
+            font-size: 14px;
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .btn-close:hover { background: #ef4444; color: #fff; border-color: #ef4444; }
+
+        .resource-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .resource-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 14px;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .resource-card:hover {
+            border-color: var(--cyan);
+            background: rgba(0, 240, 255, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .resource-card strong {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 13px;
+            color: var(--cyan);
+        }
+
+        .resource-card span {
+            font-size: 12.5px;
+            color: var(--text-muted);
+        }
+
+        /* Bottom Bar */
+        .bottom-bar {
+            height: 52px;
+            background: rgba(10, 15, 30, 0.95);
+            border-top: 1px solid var(--border-glow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 100;
+        }
+
+        .progress-container {
+            flex: 1;
+            max-width: 450px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 0 20px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #0284c7, var(--cyan));
+            width: 12.5%;
+            transition: width 0.3s ease;
+        }
+
+        .nav-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            background: rgba(0, 240, 255, 0.15);
+            border: 1px solid var(--cyan);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 4px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .nav-btn:hover {
+            background: var(--cyan);
+            color: #000;
+        }
+
+        .slide-counter {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12.5px;
+            color: var(--text-muted);
+        }
+
+        /* Copy Button */
+        .copy-pill {
+            background: rgba(0, 240, 255, 0.15);
+            border: 1px solid var(--cyan);
+            color: var(--cyan);
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-family: 'Orbitron', sans-serif;
+            cursor: pointer;
+            float: right;
+        }
+        .copy-pill:hover { background: var(--cyan); color: #000; }
+    </style>
+</head>
+<body>
+
+    <!-- Top Status Bar -->
+    <div class="top-bar">
+        <div class="brand">
+            <span class="badge-red">NASA</span>
+            <span class="presentation-title">SPACE APPS CHALLENGE // AI ACCELERATION</span>
+        </div>
+        <div class="top-actions">
+            <div class="session-timer">
+                <span>TIME:</span>
+                <span id="countdown">30:00</span>
+            </div>
+            <button class="btn-hub" id="btn-open-hub">🚀 DEMOS & PROMPTS</button>
+            <button class="notes-btn" id="btn-toggle-notes">SCRIPT (N)</button>
+        </div>
+    </div>
+
+    <!-- Main Presentation Stage -->
+    <div class="slide-stage" id="slide-stage">
+
+        <!-- Slide 1: Title Slide -->
+        <div class="slide active" id="slide-1" data-time="0:00 - 3:00" data-notes="Welcome everyone! In a 48-hour NASA Space Apps Challenge, code velocity is the #1 differentiator. Today we explore how to prototype at lightspeed using AI assistance, from instant SVG browser simulations to fullstack deployment, and how to master 'vibe coding' without crashing your project.">
+            <div class="slide-header">
+                <span class="slide-num">// MISSION BRIEFING 01</span>
+                <h2>BUILDING FASTER WITH AI</h2>
+                <div class="slide-subtitle">AI-Assisted Coding, Rapid Prototyping & "Vibe Coding" for Space Apps Hackathons</div>
+            </div>
+
+            <div class="grid-2">
+                <div class="card" style="border-left: 4px solid var(--cyan); justify-content: center;">
+                    <h3 style="font-size: 18px;">The 48-Hour Hackathon Reality</h3>
+                    <p>Judges don't inspect your backend architecture first — they evaluate <strong>clarity of scientific storytelling, working interactive prototypes, and novel problem solving</strong>.</p>
+                    <p style="margin-top: 8px;">In this 30-minute session, you will learn:</p>
+                    <ul class="feature-list" style="margin-top: 6px;">
+                        <li>What tier of app to build based on challenge complexity</li>
+                        <li>How to "vibe code" visual SVG simulations in minutes</li>
+                        <li>Which frontier model to use for logic vs visuals vs scientific data</li>
+                        <li>How to avoid common AI pitfalls before Sunday submission</li>
+                    </ul>
+                </div>
+
+                <div class="card" style="justify-content: center; background: rgba(11, 61, 145, 0.25); border-color: rgba(56, 189, 248, 0.3);">
+                    <h3>Workshop Flight Plan (30 Mins)</h3>
+                    <div style="display: flex; flex-direction: column; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 12.5px;">
+                        <div><span style="color: var(--cyan);">00-05m:</span> The Prototype Spectrum: HTML vs Fullstack</div>
+                        <div><span style="color: var(--cyan);">05-12m:</span> The "Vibe Coding" Playbook & Frontier Models</div>
+                        <div><span style="color: var(--cyan);">12-18m:</span> Live Demos: Physics & Data SVG Simulators</div>
+                        <div><span style="color: var(--purple-ai);">18-26m:</span> ⚡ 8-Minute Hands-On Challenge: Build a Widget</div>
+                        <div><span style="color: var(--green);">26-30m:</span> Deployment Strategies & Pitfalls to Avoid</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-top: 10px;">
+                <span>NASA SPACE APPS CHALLENGE WORKSHOP</span>
+                <span>GITHUB PAGES EDITION // SHAREABLE URL</span>
+            </div>
+        </div>
+
+        <!-- Slide 2: The Prototyping Spectrum -->
+        <div class="slide" id="slide-2" data-time="3:00 - 7:00" data-notes="Notice the 4 levels of complexity. Too many teams waste 18 hours configuring Docker, auth, and databases for a static dataset. Start at Level 1 or 2! Only climb up if your challenge explicitly requires real-time databases or distributed compute.">
+            <div class="slide-header">
+                <span class="slide-num">// SYSTEM ARCHITECTURE 02</span>
+                <h2>WHAT CAN WE BUILD WITH AI?</h2>
+                <div class="slide-subtitle">The Complexity Escalation Ladder: Pick the Right Level for Your 48h Goal</div>
+            </div>
+
+            <div class="grid-2">
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div class="card" style="border-left: 3px solid var(--green);">
+                        <h3>Level 1: Zero-Backend Single File (HTML + SVG + Canvas)</h3>
+                        <p><strong>Use Case:</strong> Visual simulations, interactive educational tools, orbital mechanics visualizers, satellite dashboards.</p>
+                        <p style="font-size: 12.5px; color: var(--cyan);">⚡ Vibe Code Ready: 1 prompt (5-10 mins) | Deploy: GitHub Pages in 10s</p>
+                    </div>
+
+                    <div class="card" style="border-left: 3px solid var(--cyan);">
+                        <h3>Level 2: Data Science / Scripting (Python + Streamlit / FastAPI)</h3>
+                        <p><strong>Use Case:</strong> Processing NASA NetCDF, GeoTIFF, planetary CSVs, satellite computer vision.</p>
+                        <p style="font-size: 12.5px; color: var(--cyan);">⚡ Build Time: 1-2 hours | Deploy: Hugging Face Spaces / Streamlit Cloud</p>
+                    </div>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div class="card" style="border-left: 3px solid var(--amber);">
+                        <h3>Level 3: Modern Webapp (Next.js / Node.js / Laravel / Tailwind)</h3>
+                        <p><strong>Use Case:</strong> Multi-page platforms, user dashboards, interactive 3D globes (CesiumJS, Three.js) with API routes.</p>
+                        <p style="font-size: 12.5px; color: var(--amber);">⚠️ Build Time: 4-8 hours | Best with: Bolt.new, v0, Cursor</p>
+                    </div>
+
+                    <div class="card" style="border-left: 3px solid #ef4444;">
+                        <h3>Level 4: Full Containerized Stack (Docker, Postgres, Microservices)</h3>
+                        <p><strong>Use Case:</strong> Complex spatial databases (PostGIS), custom AI fine-tuned inference pipelines.</p>
+                        <p style="font-size: 12.5px; color: #ef4444;">⚠️ Hackathon Hazard: Risk of getting bogged down in infra bugs.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: The Vibe Coding Playbook -->
+        <div class="slide" id="slide-3" data-time="7:00 - 11:00" data-notes="Let's demystify 'vibe coding'. Andrej Karpathy coined it: you code by steering natural language prompts, reviewing diffs, and observing execution. It works amazingly for frontend UI, SVG graphics, and math simulations. But you must keep tight verification loops, otherwise you accumulate silent bugs.">
+            <div class="slide-header">
+                <span class="slide-num">// METHODOLOGY 03</span>
+                <h2>THE "VIBE CODING" PLAYBOOK</h2>
+                <div class="slide-subtitle">How to Steer LLMs Without Losing Control of Your Codebase</div>
+            </div>
+
+            <div class="grid-3">
+                <div class="card">
+                    <h3 style="color: var(--green);">1. What CAN You Vibe Code?</h3>
+                    <ul class="feature-list">
+                        <li>Interactive SVG infographics & animated science models</li>
+                        <li>Tailwind/CSS cyber-HUD dashboards & slick landing pages</li>
+                        <li>Data parsing scripts (converting NASA JSON/CSV into charts)</li>
+                        <li>Game loops & Canvas 2D orbital gravity simulations</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3 style="color: var(--amber);">2. What Needs Strict Guardrails?</h3>
+                    <ul class="feature-list">
+                        <li>Authentication & secrets management (.env leaks)</li>
+                        <li>Complex state management across 10+ nested components</li>
+                        <li>Astrodynamics math (always feed known Kepler equations to prompt!)</li>
+                        <li>Third-party NASA API rate limits & token limits</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3 style="color: var(--purple-ai);">3. The 3 Golden Rules</h3>
+                    <ul class="feature-list">
+                        <li><strong>Single Responsibility:</strong> Ask for 1 component or 1 feature per prompt</li>
+                        <li><strong>Inspect the Diff:</strong> Don't blindly accept full file rewrites</li>
+                        <li><strong>Always Provide Context:</strong> Feed the schema or exact NASA sample payload first</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 10px; background: rgba(0, 240, 255, 0.05); padding: 10px 18px;">
+                <p style="font-size: 13.5px;"><strong>The Hackathon Secret Formula:</strong> "Prompt for the layout first, then prompt for the math/physics engine, then prompt for interactive sliders and sound/visual polish."</p>
+            </div>
+        </div>
+
+        <!-- Slide 4: Pros and Cons Matrix -->
+        <div class="slide" id="slide-4" data-time="11:00 - 14:00" data-notes="Walk the team through this matrix. Notice how Single-file HTML/SVG has the lowest risk of failing on submission night. If judges click a Vercel link and see a 500 internal server error because a Postgres container didn't boot, you lose points. Reliability is king.">
+            <div class="slide-header">
+                <span class="slide-num">// TRADE-OFF ANALYSIS 04</span>
+                <h2>PROS & CONS OF PROTOTYPING APPROACHES</h2>
+                <div class="slide-subtitle">Balancing Velocity vs Scalability During a 48-Hour Sprint</div>
+            </div>
+
+            <table class="matrix-table">
+                <thead>
+                    <tr>
+                        <th>Tech Stack Tier</th>
+                        <th>Pros (Hackathon Advantage)</th>
+                        <th>Cons & Gotchas</th>
+                        <th>Vibe Coding Speed</th>
+                        <th>Deploy Reliability</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Single-File HTML / SVG / JS</strong></td>
+                        <td>Zero dependencies, opens offline, instant preview, 0 deploy friction</td>
+                        <td>Hard to scale beyond 800 lines of code; limited to client-side data</td>
+                        <td><span class="tag tag-best">🚀 5 - 15 mins</span></td>
+                        <td><span class="tag tag-best">100% (Never breaks)</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Python + Streamlit / Gradio</strong></td>
+                        <td>Native pandas/numpy/astropy support, instant ML models & NASA charts</td>
+                        <td>UI looks standardized, less custom aesthetic control</td>
+                        <td><span class="tag tag-best">⚡ 30 - 60 mins</span></td>
+                        <td><span class="tag tag-good">95% (HuggingFace)</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Fullstack (Next.js / Node / Tailwind)</strong></td>
+                        <td>Production polish, rich 3D libraries (Three.js/Cesium), dynamic APIs</td>
+                        <td>Package version conflicts, Node module hydration errors, context rot</td>
+                        <td><span class="tag tag-good">⏱️ 2 - 4 hours</span></td>
+                        <td><span class="tag tag-caution">85% (Build errors)</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Containerized (Docker + Laravel/Django)</strong></td>
+                        <td>Full isolation, real DB persistence, exact team environment parity</td>
+                        <td>Heavy config overhead, slow iteration loops, Cloud bill surprise</td>
+                        <td><span class="tag tag-caution">🐢 4 - 8 hours</span></td>
+                        <td><span class="tag tag-caution">70% (Port/ENV issues)</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Slide 5: Frontier Models Performance Comparison -->
+        <div class="slide" id="slide-5" data-time="14:00 - 18:00" data-notes="Different frontier models have specialized superpowers. Claude 3.5/3.7 Sonnet is currently the undisputed king for CSS/SVG and UI layout aesthetics. OpenAI o1 and o3-mini excel at reasoning through complex spatial orbital physics equations. Gemini 2.0/2.5 Pro has an unmatched 1M-2M token window, perfect for dropping in an entire 80-page NASA mission specification or raw satellite dataset!">
+            <div class="slide-header">
+                <span class="slide-num">// FRONTIER BENCHMARK 05</span>
+                <h2>FRONTIER MODELS CODING PERFORMANCE</h2>
+                <div class="slide-subtitle">Matching the Best Model to the Right Hackathon Task</div>
+            </div>
+
+            <table class="matrix-table">
+                <thead>
+                    <tr>
+                        <th>Frontier Model</th>
+                        <th>Superpower in Hackathons</th>
+                        <th>UI & SVG Generation</th>
+                        <th>Complex Math / Physics</th>
+                        <th>Context / Large Datasets</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Anthropic Claude 3.5 / 3.7 Sonnet</strong></td>
+                        <td><strong>Vibe Coding & Frontend King:</strong> Flawless design sense, modern Tailwind, clean SVG markup, minimal hallucinated CSS.</td>
+                        <td><span class="tag tag-best">⭐ 9.8 / 10</span></td>
+                        <td><span class="tag tag-good">8.8 / 10</span></td>
+                        <td><span class="tag tag-good">200K Tokens</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>OpenAI o3-mini / o1 / GPT-4o</strong></td>
+                        <td><strong>Algorithmic Reasoning:</strong> Outstanding at orbital mechanics, trajectory vectors, backend API routing & bug fixing.</td>
+                        <td><span class="tag tag-good">8.5 / 10</span></td>
+                        <td><span class="tag tag-best">⭐ 9.9 / 10</span></td>
+                        <td><span class="tag tag-good">128K - 200K</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Google Gemini 2.0 Flash / 2.5 Pro</strong></td>
+                        <td><strong>Multimodal & Massive Context:</strong> Feed entire 100-page NASA PDFs, satellite images, and huge GeoJSON datasets in one go.</td>
+                        <td><span class="tag tag-good">8.9 / 10</span></td>
+                        <td><span class="tag tag-good">9.1 / 10</span></td>
+                        <td><span class="tag tag-best">⭐ 1M - 2M Tokens</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>DeepSeek-R1 / V3</strong></td>
+                        <td><strong>Cost-Effective Logic:</strong> Great open-weights reasoning for self-hosted or budget-conscious data scraping & scripts.</td>
+                        <td><span class="tag tag-caution">7.8 / 10</span></td>
+                        <td><span class="tag tag-good">9.2 / 10</span></td>
+                        <td><span class="tag tag-good">128K Tokens</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style="margin-top: 10px; font-size: 13px; color: var(--text-muted); display: flex; gap: 20px;">
+                <span>💡 <strong>Recommended Prototyping Pair:</strong> Use <em>Gemini/o3-mini</em> to parse NASA data & write physics math; use <em>Claude</em> to build the interactive SVG frontend.</span>
+            </div>
+        </div>
+
+        <!-- Slide 6: Live Demos Showcase -->
+        <div class="slide" id="slide-6" data-time="18:00 - 21:00" data-notes="Now we switch to our live browser demos. Both of these were built with zero build tools—pure single-file HTML, SVG, and Canvas. Show them how the probe trajectory responds to the mass of Jupiter, and how the light curve dips when the exoplanet passes the star.">
+            <div class="slide-header">
+                <span class="slide-num">// FLIGHT SIMULATIONS 06</span>
+                <h2>LIVE DEMOS: WHAT YOU CAN VIBE CODE</h2>
+                <div class="slide-subtitle">Interactive Space Simulations Built in Single HTML Files via AI</div>
+            </div>
+
+            <div class="grid-2">
+                <div class="card" style="border: 1px solid var(--cyan);">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="color: var(--cyan);">DEMO 1: Gravitational Slingshot</h3>
+                        <span class="tag tag-best">SVG + CANVAS PHYSICS</span>
+                    </div>
+                    <p>Interactive n-body trajectory calculation where users slingshot a spacecraft past Jupiter to gain Delta-V velocity.</p>
+                    <ul class="feature-list" style="font-size: 13px;">
+                        <li>Real-time Newtonian gravity vector calculation</li>
+                        <li>SVG gravitational equipotential glow fields</li>
+                        <li>Dynamic telemetry HUD (speed, eccentricity, time)</li>
+                    </ul>
+                    <a href="demo1_orbital_slingshot.html" target="_blank" class="demo-btn-link">LAUNCH SLINGSHOT DEMO ↗</a>
+                </div>
+
+                <div class="card" style="border: 1px solid #38bdf8;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="color: #38bdf8;">DEMO 2: Exoplanet Transit Photometry</h3>
+                        <span class="tag tag-best">NASA KEPLER/TESS</span>
+                    </div>
+                    <p>Visualizing exoplanet transit across an alien star with synchronized real-time flux curve dips and limb darkening.</p>
+                    <ul class="feature-list" style="font-size: 13px;">
+                        <li>SVG animated star corona and planetary transit path</li>
+                        <li>Real-time canvas light-curve chart synchronization</li>
+                        <li>Preset controls for Jupiter, Neptune, and Earth sizes</li>
+                    </ul>
+                    <a href="demo2_exoplanet_transit.html" target="_blank" class="demo-btn-link">LAUNCH TRANSIT LAB DEMO ↗</a>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 10px; background: rgba(168, 85, 247, 0.1); border-color: rgba(168, 85, 247, 0.3);">
+                <p style="font-size: 13px; color: #d8b4fe;"><strong>Prompt Anatomy for These Demos:</strong> "Create a single-file index.html space telemetry dashboard with dark theme, Orbitron font, an SVG/Canvas simulation of [Physics Concept], interactive range sliders, and real-time status badges with zero external build tools."</p>
+            </div>
+        </div>
+
+        <!-- Slide 7: Hands-On Activity -->
+        <div class="slide" id="slide-7" data-time="21:00 - 27:00" data-notes="Kick off the 6-8 minute hands-on activity! Have everyone open their favorite AI chat (Claude, ChatGPT, Gemini, Cursor, Bolt, or v0). Give them the prompt template below and challenge them to generate a working widget in 5 minutes.">
+            <div class="slide-header">
+                <span class="slide-num">// INTERACTIVE MISSION 07</span>
+                <h2>8-MINUTE CHALLENGE: "SPEED ORBIT"</h2>
+                <div class="slide-subtitle">Vibe Code a NASA Space Apps Widget in 300 Seconds</div>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <h3 style="color: var(--green);">Your Mission</h3>
+                    <p>Open ChatGPT, Claude, Gemini, Bolt.new, or Cursor and generate a <strong>single-file HTML/SVG widget</strong> for one of these NASA scenarios:</p>
+                    <ul class="feature-list" style="font-size: 13px;">
+                        <li><strong>Track A:</strong> Lunar Lander Fuel & Descent Thrust Gauge</li>
+                        <li><strong>Track B:</strong> Solar Flare Radiation Hazard Early-Warning Radar</li>
+                        <li><strong>Track C:</strong> ISS Live Orbit Tracker with Day/Night terminator</li>
+                    </ul>
+                    <div style="margin-top: 8px; display: flex; gap: 10px; align-items: center;">
+                        <a href="activity_sample_lunar_lander.html" target="_blank" class="demo-btn-link" style="font-size: 11px; padding: 6px 12px;">VIEW SAMPLE SOLUTION ↗</a>
+                        <span style="font-size: 11.5px; color: var(--text-muted);">⏱️ 5 min build + 2 min showcase</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="color: var(--cyan);">Prompt Template</h3>
+                        <button class="copy-pill" id="btn-copy-prompt">COPY PROMPT</button>
+                    </div>
+                    <pre><code id="prompt-code">"Generate a single-file index.html prototype
+for a NASA Space Apps challenge.
+Topic: [Lunar Lander / Solar Radar / ISS Orbit]
+Requirements:
+1. Cyberpunk / NASA Mission Control dark theme
+   with glowing SVG indicators.
+2. Interactive controls (sliders or toggle buttons).
+3. Real-time animated canvas or SVG telemetry.
+4. Clean, responsive vanilla HTML + CSS + JS.
+Do not use external build tools or npm."</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8: Deployment & Hackathon Checklist -->
+        <div class="slide" id="slide-8" data-time="27:00 - 30:00" data-notes="Wrap up with the hackathon submission checklist. Most points are lost not because the code was bad, but because the video didn't load, the demo crashed, or the team ran out of time. Always lock your demo code 4 hours before deadline!">
+            <div class="slide-header">
+                <span class="slide-num">// MISSION SUCCESS 08</span>
+                <h2>DEPLOYMENT & SUBMISSION SURVIVAL GUIDE</h2>
+                <div class="slide-subtitle">The Final 10% That Wins NASA Space Apps Challenges</div>
+            </div>
+
+            <div class="grid-3">
+                <div class="card" style="border-top: 3px solid var(--cyan);">
+                    <h3>Instant Deployment</h3>
+                    <ul class="feature-list" style="font-size: 13px;">
+                        <li><strong>GitHub Pages:</strong> Push single HTML to repo -> Settings -> Pages (instant free SSL)</li>
+                        <li><strong>Vercel / Netlify:</strong> Drag-and-drop folder or git push for Next.js / HTML</li>
+                        <li><strong>Hugging Face Spaces:</strong> 1-click Python Streamlit host</li>
+                    </ul>
+                </div>
+
+                <div class="card" style="border-top: 3px solid var(--amber);">
+                    <h3>Top 3 AI Pitfalls</h3>
+                    <ul class="feature-list" style="font-size: 13px;">
+                        <li><strong>Context Rot:</strong> Asking for too many edits in one chat turns code into spaghetti. Start fresh chats!</li>
+                        <li><strong>Hallucinated Datasets:</strong> Always feed real NASA API JSON schemas to the prompt.</li>
+                        <li><strong>Docker Trap:</strong> Don't spend 12 hours debugging Docker configs.</li>
+                    </ul>
+                </div>
+
+                <div class="card" style="border-top: 3px solid var(--green);">
+                    <h3>Winning Submission Formula</h3>
+                    <ul class="feature-list" style="font-size: 13px;">
+                        <li><strong>Live URL that works:</strong> Judges test it on mobile & desktop</li>
+                        <li><strong>30-second screen recording:</strong> In case the live site is slow</li>
+                        <li><strong>Clear scientific impact:</strong> Which NASA dataset was utilized?</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 10px; background: rgba(0, 240, 255, 0.08); text-align: center; padding: 10px;">
+                <p style="font-family: 'Orbitron', sans-serif; font-size: 14.5px; color: var(--cyan);">GO FOR LAUNCH! 🚀 BUILD BOLD, VIBE CODE SMART, WIN SPACE APPS.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Speaker Notes Drawer -->
+    <div class="notes-drawer" id="notes-drawer">
+        <div class="notes-header">
+            <span>MISSION CONTROL SPEAKER SCRIPT</span>
+            <span id="notes-time-tag" style="color: var(--cyan);">TIME: 0:00 - 3:00</span>
+        </div>
+        <div class="notes-text" id="notes-body">
+            Welcome everyone! In a 48-hour NASA Space Apps Challenge, code velocity is the #1 differentiator...
+        </div>
+    </div>
+
+    <!-- Workshop Resources Hub Modal -->
+    <div class="modal-overlay" id="hub-modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>🚀 WORKSHOP HUB & DEMOS</h3>
+                <button class="btn-close" id="btn-close-hub">✕</button>
+            </div>
+            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 14px;">Direct links to all interactive demos, sample solutions, and guides included in this workshop repository:</p>
+            
+            <div class="resource-grid">
+                <a href="demo1_orbital_slingshot.html" target="_blank" class="resource-card">
+                    <strong>🪐 Demo 1: Orbital Slingshot</strong>
+                    <span>Interactive gravitational physics simulation past Jupiter with telemetry HUD.</span>
+                </a>
+                <a href="demo2_exoplanet_transit.html" target="_blank" class="resource-card">
+                    <strong>🔭 Demo 2: Exoplanet Transit</strong>
+                    <span>Kepler/TESS photometry lab with synchronized real-time flux curve dips.</span>
+                </a>
+                <a href="activity_sample_lunar_lander.html" target="_blank" class="resource-card">
+                    <strong>🌕 Activity Sample: Lunar Lander</strong>
+                    <span>Artemis lunar descent cockpit HUD with RCS thrusters & touchdown physics.</span>
+                </a>
+                <a href="https://github.com" target="_blank" class="resource-card">
+                    <strong>📝 Activity Guide & Prompts</strong>
+                    <span>Read ACTIVITY_GUIDE.md for copy-paste prompts across 3 challenge tracks.</span>
+                </a>
+            </div>
+
+            <div style="text-align: right;">
+                <button class="nav-btn" id="btn-hub-close-action" style="font-size: 11px;">CLOSE HUB</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <div class="bottom-bar">
+        <div class="nav-controls">
+            <button class="nav-btn" id="btn-prev">◀ PREV</button>
+            <button class="nav-btn" id="btn-next">NEXT ▶</button>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-fill" id="progress-bar"></div>
+        </div>
+
+        <div class="slide-counter">
+            SLIDE <span id="cur-slide">1</span> / <span id="total-slides">8</span>
+        </div>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const curSlideEl = document.getElementById('cur-slide');
+        const totalSlidesEl = document.getElementById('total-slides');
+        const progressBar = document.getElementById('progress-bar');
+        const notesDrawer = document.getElementById('notes-drawer');
+        const notesBody = document.getElementById('notes-body');
+        const notesTimeTag = document.getElementById('notes-time-tag');
+        const btnToggleNotes = document.getElementById('btn-toggle-notes');
+        const countdownEl = document.getElementById('countdown');
+        const hubModal = document.getElementById('hub-modal');
+        const btnOpenHub = document.getElementById('btn-open-hub');
+        const btnCloseHub = document.getElementById('btn-close-hub');
+        const btnHubCloseAction = document.getElementById('btn-hub-close-action');
+        const btnCopyPrompt = document.getElementById('btn-copy-prompt');
+
+        let currentIndex = 0;
+        totalSlidesEl.innerText = slides.length;
+
+        function updateSlide(index) {
+            slides.forEach((s, i) => {
+                s.classList.toggle('active', i === index);
+            });
+            curSlideEl.innerText = index + 1;
+            const pct = ((index + 1) / slides.length) * 100;
+            progressBar.style.width = pct + '%';
+
+            const activeSlide = slides[index];
+            notesBody.innerText = activeSlide.getAttribute('data-notes') || 'No speaker notes for this slide.';
+            notesTimeTag.innerText = 'TARGET TIME: ' + (activeSlide.getAttribute('data-time') || 'N/A');
+        }
+
+        function nextSlide() {
+            if (currentIndex < slides.length - 1) {
+                currentIndex++;
+                updateSlide(currentIndex);
+            }
+        }
+
+        function prevSlide() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                updateSlide(currentIndex);
+            }
+        }
+
+        document.getElementById('btn-next').addEventListener('click', nextSlide);
+        document.getElementById('btn-prev').addEventListener('click', prevSlide);
+
+        // Keyboard Navigation
+        window.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+                e.preventDefault();
+                prevSlide();
+            } else if (e.key.toLowerCase() === 'n') {
+                toggleNotes();
+            } else if (e.key.toLowerCase() === 'h') {
+                toggleHub();
+            }
+        });
+
+        // Touch swipe support for mobile/tablet viewers
+        let touchStartX = 0;
+        let touchEndX = 0;
+        const stage = document.getElementById('slide-stage');
+
+        stage.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        stage.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, { passive: true });
+
+        function handleSwipe() {
+            const diff = touchEndX - touchStartX;
+            if (diff < -50) nextSlide(); // Swiped left -> Next
+            if (diff > 50) prevSlide();  // Swiped right -> Prev
+        }
+
+        function toggleNotes() {
+            notesDrawer.classList.toggle('open');
+            btnToggleNotes.style.background = notesDrawer.classList.contains('open') 
+                ? 'var(--purple-ai)' 
+                : 'rgba(168, 85, 247, 0.2)';
+            btnToggleNotes.style.color = '#fff';
+        }
+
+        btnToggleNotes.addEventListener('click', toggleNotes);
+
+        function toggleHub() {
+            hubModal.classList.toggle('open');
+        }
+
+        btnOpenHub.addEventListener('click', toggleHub);
+        btnCloseHub.addEventListener('click', toggleHub);
+        btnHubCloseAction.addEventListener('click', toggleHub);
+
+        // Copy prompt functionality
+        if (btnCopyPrompt) {
+            btnCopyPrompt.addEventListener('click', () => {
+                const code = document.getElementById('prompt-code').innerText;
+                navigator.clipboard.writeText(code).then(() => {
+                    btnCopyPrompt.innerText = 'COPIED! ✓';
+                    btnCopyPrompt.style.background = '#10b981';
+                    btnCopyPrompt.style.color = '#fff';
+                    setTimeout(() => {
+                        btnCopyPrompt.innerText = 'COPY PROMPT';
+                        btnCopyPrompt.style.background = 'rgba(0, 240, 255, 0.15)';
+                        btnCopyPrompt.style.color = 'var(--cyan)';
+                    }, 2000);
+                });
+            });
+        }
+
+        // 30-minute presenter countdown timer
+        let secondsLeft = 30 * 60;
+        let timerRunning = true;
+        setInterval(() => {
+            if (timerRunning && secondsLeft > 0) {
+                secondsLeft--;
+                const mins = Math.floor(secondsLeft / 60);
+                const secs = secondsLeft % 60;
+                countdownEl.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                if (secondsLeft < 300) {
+                    countdownEl.style.color = '#ef4444';
+                    countdownEl.style.borderColor = '#ef4444';
+                }
+            }
+        }, 1000);
+
+        // Init
+        updateSlide(0);
+    </script>
+</body>
+</html>

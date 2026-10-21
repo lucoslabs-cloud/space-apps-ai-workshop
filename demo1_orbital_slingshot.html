@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NASA Space Apps Demo | Gravitational Slingshot Simulator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Rajdhani:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #05070f;
+            --panel-bg: rgba(10, 16, 32, 0.85);
+            --border-glow: rgba(0, 229, 255, 0.3);
+            --cyan-glow: #00f0ff;
+            --orange-alert: #ff6b35;
+            --green-active: #00ff88;
+            --text-main: #e2e8f0;
+            --text-dim: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: 'Rajdhani', sans-serif;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Mission HUD */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 24px;
+            background: linear-gradient(180deg, rgba(13, 22, 45, 0.95) 0%, rgba(5, 7, 15, 0.8) 100%);
+            border-bottom: 1px solid var(--border-glow);
+            z-index: 10;
+        }
+
+        .mission-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nasa-badge {
+            background: #e11d48;
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            box-shadow: 0 0 12px rgba(225, 29, 72, 0.5);
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            letter-spacing: 2px;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+        }
+
+        .meta-tag {
+            font-size: 12px;
+            color: var(--cyan-glow);
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(0, 240, 255, 0.1);
+            padding: 3px 8px;
+            border-radius: 3px;
+            border: 1px solid rgba(0, 240, 255, 0.25);
+        }
+
+        /* Main Workspace */
+        .workspace {
+            flex: 1;
+            display: flex;
+            position: relative;
+        }
+
+        #sim-canvas {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            display: block;
+            background: radial-gradient(circle at 50% 50%, #0d162d 0%, #05070f 80%);
+        }
+
+        /* Control Panel */
+        .controls-overlay {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            width: 320px;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-glow);
+            backdrop-filter: blur(12px);
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+            z-index: 5;
+        }
+
+        .panel-header {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 13px;
+            color: var(--cyan-glow);
+            letter-spacing: 1.5px;
+            border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+            padding-bottom: 6px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .control-group {
+            margin-bottom: 12px;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dim);
+            margin-bottom: 4px;
+        }
+
+        .control-val {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--cyan-glow);
+        }
+
+        input[type="range"] {
+            width: 100%;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.1);
+            height: 5px;
+            border-radius: 3px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--cyan-glow);
+            cursor: pointer;
+            box-shadow: 0 0 8px var(--cyan-glow);
+        }
+
+        .btn-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        button {
+            background: rgba(0, 240, 255, 0.15);
+            border: 1px solid var(--cyan-glow);
+            color: #fff;
+            padding: 8px 12px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            background: var(--cyan-glow);
+            color: #000;
+            box-shadow: 0 0 15px var(--cyan-glow);
+        }
+
+        button.btn-launch {
+            grid-column: span 2;
+            background: linear-gradient(90deg, #ff6b35 0%, #f97316 100%);
+            border: 1px solid #ff8c42;
+            color: #fff;
+            font-size: 13px;
+            padding: 10px;
+        }
+
+        button.btn-launch:hover {
+            background: #ff8c42;
+            box-shadow: 0 0 20px rgba(255, 107, 53, 0.8);
+            color: #fff;
+        }
+
+        /* Telemetry HUD (Right) */
+        .telemetry-overlay {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 280px;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-glow);
+            backdrop-filter: blur(12px);
+            border-radius: 8px;
+            padding: 16px;
+            z-index: 5;
+        }
+
+        .telemetry-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 13px;
+        }
+
+        .telem-label {
+            color: var(--text-dim);
+        }
+
+        .telem-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 1px;
+        }
+
+        .status-orbit { background: rgba(0, 255, 136, 0.2); color: var(--green-active); border: 1px solid var(--green-active); }
+        .status-escape { background: rgba(0, 240, 255, 0.2); color: var(--cyan-glow); border: 1px solid var(--cyan-glow); }
+        .status-crash { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; }
+
+        /* Vibe Coding Annotation Banner */
+        .vibe-banner {
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(0, 240, 255, 0.4);
+            border-radius: 24px;
+            padding: 8px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            font-size: 13px;
+            z-index: 5;
+        }
+
+        .vibe-pill {
+            background: linear-gradient(90deg, #ec4899, #8b5cf6);
+            color: #fff;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* SVG Overlays */
+        svg.decor-vectors {
+            position: absolute;
+            pointer-events: none;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="mission-title">
+            <span class="nasa-badge">NASA SPACE APPS</span>
+            <h1>GRAVITATIONAL SLINGSHOT SIMULATOR</h1>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <span class="meta-tag">HACKATHON PROTO-LEVEL: 1 (Pure HTML/JS/SVG)</span>
+            <span class="meta-tag" style="color: #a855f7; border-color: #a855f7;">AI BUILD TIME: ~90s</span>
+        </div>
+    </header>
+
+    <div class="workspace">
+        <canvas id="sim-canvas"></canvas>
+
+        <!-- Dynamic SVG vectors for gravity wells and orbits -->
+        <svg class="decor-vectors" id="svg-layer">
+            <defs>
+                <radialGradient id="planetGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.8"/>
+                    <stop offset="70%" stop-color="#0284c7" stop-opacity="0.3"/>
+                    <stop offset="100%" stop-color="#0284c7" stop-opacity="0"/>
+                </radialGradient>
+            </defs>
+        </svg>
+
+        <!-- Interactive Flight Controls -->
+        <div class="controls-overlay">
+            <div class="panel-header">
+                <span>TRAJECTORY INJECTION</span>
+                <span>CTRL // 01</span>
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Injection Velocity (v₀)</span>
+                    <span class="control-val" id="val-vel">6.4 km/s</span>
+                </div>
+                <input type="range" id="param-vel" min="2.0" max="11.0" step="0.1" value="6.4">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Perigee Altitude (Offset)</span>
+                    <span class="control-val" id="val-angle">160 km</span>
+                </div>
+                <input type="range" id="param-offset" min="60" max="320" step="5" value="160">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Target Body Mass (M)</span>
+                    <span class="control-val" id="val-mass">1.0x Jupiter</span>
+                </div>
+                <input type="range" id="param-mass" min="0.3" max="2.5" step="0.1" value="1.0">
+            </div>
+
+            <div class="btn-row">
+                <button class="btn-launch" id="btn-fire">LAUNCH PROBE [ENTER]</button>
+                <button id="btn-clear">CLEAR TRAILS</button>
+                <button id="btn-demo-capture">PRESET: CAPTURE</button>
+            </div>
+        </div>
+
+        <!-- Telemetry Data Overlay -->
+        <div class="telemetry-overlay">
+            <div class="panel-header">
+                <span>ORBITAL TELEMETRY</span>
+                <span id="telem-status" class="status-badge status-orbit">READY</span>
+            </div>
+
+            <div class="telemetry-item">
+                <span class="telem-label">Current Velocity:</span>
+                <span class="telem-val" id="t-vel">0.00 km/s</span>
+            </div>
+            <div class="telemetry-item">
+                <span class="telem-label">Altitude to Center:</span>
+                <span class="telem-val" id="t-alt">0 km</span>
+            </div>
+            <div class="telemetry-item">
+                <span class="telem-label">Delta-V Gained:</span>
+                <span class="telem-val" id="t-deltav" style="color: var(--green-active);">+0.00 km/s</span>
+            </div>
+            <div class="telemetry-item">
+                <span class="telem-label">Eccentricity (e):</span>
+                <span class="telem-val" id="t-ecc">0.00</span>
+            </div>
+            <div class="telemetry-item">
+                <span class="telem-label">Mission Time Elapsed:</span>
+                <span class="telem-val" id="t-time">T+ 00:00</span>
+            </div>
+        </div>
+
+        <!-- Vibe Coding Callout -->
+        <div class="vibe-banner">
+            <span class="vibe-pill">VIBE CODE INSIGHT</span>
+            <span>Zero build setup: Single file created via LLM prompt with 2D gravity equations + canvas trail blending.</span>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('sim-canvas');
+        const ctx = canvas.getContext('2d');
+        const svgLayer = document.getElementById('svg-layer');
+
+        let width, height;
+        let planet = { x: 0, y: 0, radius: 45, mass: 1800 };
+        let probe = null;
+        let trail = [];
+        let stars = [];
+        let missionTimer = 0;
+        let initialSpeed = 6.4;
+        let simRunning = false;
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            planet.x = width / 2;
+            planet.y = height / 2;
+            generateStars();
+            drawStaticSVG();
+        }
+
+        function generateStars() {
+            stars = [];
+            for (let i = 0; i < 180; i++) {
+                stars.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    r: Math.random() * 1.5 + 0.3,
+                    alpha: Math.random() * 0.8 + 0.2
+                });
+            }
+        }
+
+        function drawStaticSVG() {
+            // Render gravitational equipotential rings in SVG
+            svgLayer.innerHTML = `
+                <defs>
+                    <radialGradient id="pGlow" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#0284c7" stop-opacity="0.5"/>
+                        <stop offset="60%" stop-color="#0284c7" stop-opacity="0.1"/>
+                        <stop offset="100%" stop-color="#0284c7" stop-opacity="0"/>
+                    </radialGradient>
+                </defs>
+                <circle cx="${planet.x}" cy="${planet.y}" r="${planet.radius * 3.5}" fill="url(#pGlow)" />
+                <circle cx="${planet.x}" cy="${planet.y}" r="${planet.radius * 2}" stroke="rgba(0, 240, 255, 0.2)" stroke-dasharray="4 6" fill="none" />
+                <circle cx="${planet.x}" cy="${planet.y}" r="${planet.radius * 4}" stroke="rgba(0, 240, 255, 0.1)" stroke-dasharray="2 8" fill="none" />
+            `;
+        }
+
+        function launchProbe() {
+            const v0 = parseFloat(document.getElementById('param-vel').value);
+            const offset = parseFloat(document.getElementById('param-offset').value);
+            const massMult = parseFloat(document.getElementById('param-mass').value);
+            
+            planet.mass = 1800 * massMult;
+            initialSpeed = v0;
+
+            probe = {
+                x: 80,
+                y: planet.y - offset,
+                vx: v0,
+                vy: 0,
+                active: true,
+                status: 'IN FLIGHT',
+                maxSpeed: v0
+            };
+            
+            trail = [];
+            missionTimer = 0;
+            simRunning = true;
+
+            const badge = document.getElementById('telem-status');
+            badge.className = 'status-badge status-orbit';
+            badge.innerText = 'EN ROUTE';
+        }
+
+        function updatePhysics() {
+            if (!probe || !probe.active) return;
+
+            // Gravity calculation: F = G*M / r^2
+            const dx = planet.x - probe.x;
+            const dy = planet.y - probe.y;
+            const distSq = dx * dx + dy * dy;
+            const dist = Math.sqrt(distSq);
+
+            // Collision check
+            if (dist < planet.radius + 6) {
+                probe.active = false;
+                probe.status = 'IMPACT';
+                const badge = document.getElementById('telem-status');
+                badge.className = 'status-badge status-crash';
+                badge.innerText = 'IMPACT DETECTED';
+                return;
+            }
+
+            // Slingshot / Escape check
+            if (probe.x > width + 100 || probe.y > height + 100 || probe.y < -100) {
+                probe.active = false;
+                probe.status = 'ESCAPED';
+                const badge = document.getElementById('telem-status');
+                badge.className = 'status-badge status-escape';
+                badge.innerText = 'ESCAPE TRAJECTORY';
+            }
+
+            const force = planet.mass / distSq;
+            const ax = force * (dx / dist);
+            const ay = force * (dy / dist);
+
+            probe.vx += ax;
+            probe.vy += ay;
+            probe.x += probe.vx;
+            probe.y += probe.vy;
+
+            const currentSpeed = Math.sqrt(probe.vx * probe.vx + probe.vy * probe.vy);
+            if (currentSpeed > probe.maxSpeed) probe.maxSpeed = currentSpeed;
+
+            trail.push({ x: probe.x, y: probe.y, speed: currentSpeed });
+            if (trail.length > 500) trail.shift();
+
+            // Telemetry updates
+            missionTimer += 0.05;
+            document.getElementById('t-vel').innerText = currentSpeed.toFixed(2) + ' km/s';
+            document.getElementById('t-alt').innerText = Math.round(dist * 2.5) + ' km';
+            
+            const deltaV = currentSpeed - initialSpeed;
+            const deltaElem = document.getElementById('t-deltav');
+            deltaElem.innerText = (deltaV >= 0 ? '+' : '') + deltaV.toFixed(2) + ' km/s';
+            deltaElem.style.color = deltaV >= 0 ? 'var(--green-active)' : '#ef4444';
+
+            document.getElementById('t-ecc').innerText = (dist / 140).toFixed(2);
+            document.getElementById('t-time').innerText = `T+ 00:${Math.floor(missionTimer).toString().padStart(2, '0')}`;
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, width, height);
+
+            // Draw Stars
+            stars.forEach(s => {
+                ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha})`;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // Draw Central Planet Body
+            const pGrad = ctx.createRadialGradient(
+                planet.x - 12, planet.y - 12, 5,
+                planet.x, planet.y, planet.radius
+            );
+            pGrad.addColorStop(0, '#67e8f9');
+            pGrad.addColorStop(0.5, '#0284c7');
+            pGrad.addColorStop(1, '#082f49');
+
+            ctx.save();
+            ctx.shadowColor = '#00f0ff';
+            ctx.shadowBlur = 30;
+            ctx.fillStyle = pGrad;
+            ctx.beginPath();
+            ctx.arc(planet.x, planet.y, planet.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            // Planet Atmosphere ring
+            ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(planet.x, planet.y, planet.radius + 3, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Draw Trajectory Trail with Speed Color Coding
+            if (trail.length > 1) {
+                for (let i = 1; i < trail.length; i++) {
+                    const p1 = trail[i - 1];
+                    const p2 = trail[i];
+                    const alpha = i / trail.length;
+                    
+                    // Gradient based on speed
+                    ctx.strokeStyle = p2.speed > 8 
+                        ? `rgba(255, 107, 53, ${alpha})` 
+                        : `rgba(0, 240, 255, ${alpha})`;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.stroke();
+                }
+            }
+
+            // Draw Spacecraft Probe
+            if (probe) {
+                ctx.save();
+                ctx.translate(probe.x, probe.y);
+                const angle = Math.atan2(probe.vy, probe.vx);
+                ctx.rotate(angle);
+
+                // Spacecraft body
+                ctx.fillStyle = '#ffffff';
+                ctx.shadowColor = '#00ff88';
+                ctx.shadowBlur = 12;
+                ctx.beginPath();
+                ctx.moveTo(8, 0);
+                ctx.lineTo(-6, -4);
+                ctx.lineTo(-4, 0);
+                ctx.lineTo(-6, 4);
+                ctx.closePath();
+                ctx.fill();
+
+                // Thruster plume if active
+                if (probe.active) {
+                    ctx.fillStyle = '#ff6b35';
+                    ctx.beginPath();
+                    ctx.moveTo(-4, 0);
+                    ctx.lineTo(-12, -2);
+                    ctx.lineTo(-14, 0);
+                    ctx.lineTo(-12, 2);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+
+            updatePhysics();
+            requestAnimationFrame(draw);
+        }
+
+        // Event Listeners
+        window.addEventListener('resize', resize);
+        
+        document.getElementById('btn-fire').addEventListener('click', launchProbe);
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') launchProbe();
+        });
+
+        document.getElementById('btn-clear').addEventListener('click', () => {
+            trail = [];
+            probe = null;
+            document.getElementById('telem-status').innerText = 'READY';
+            document.getElementById('telem-status').className = 'status-badge status-orbit';
+            document.getElementById('t-vel').innerText = '0.00 km/s';
+            document.getElementById('t-alt').innerText = '0 km';
+            document.getElementById('t-deltav').innerText = '+0.00 km/s';
+        });
+
+        document.getElementById('btn-demo-capture').addEventListener('click', () => {
+            document.getElementById('param-vel').value = 4.7;
+            document.getElementById('param-offset').value = 135;
+            document.getElementById('param-mass').value = 1.3;
+            document.getElementById('val-vel').innerText = '4.7 km/s';
+            document.getElementById('val-angle').innerText = '135 km';
+            document.getElementById('val-mass').innerText = '1.3x Jupiter';
+            launchProbe();
+        });
+
+        document.getElementById('param-vel').addEventListener('input', (e) => {
+            document.getElementById('val-vel').innerText = `${e.target.value} km/s`;
+        });
+        document.getElementById('param-offset').addEventListener('input', (e) => {
+            document.getElementById('val-angle').innerText = `${e.target.value} km`;
+        });
+        document.getElementById('param-mass').addEventListener('input', (e) => {
+            document.getElementById('val-mass').innerText = `${e.target.value}x Jupiter`;
+        });
+
+        // Init
+        resize();
+        launchProbe();
+        draw();
+    </script>
+</body>
+</html>

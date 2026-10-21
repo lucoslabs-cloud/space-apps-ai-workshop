@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NASA Space Apps Demo | Exoplanet Transit & Light Curve</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Rajdhani:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #070913;
+            --panel-bg: rgba(13, 20, 38, 0.9);
+            --border-glow: rgba(56, 189, 248, 0.25);
+            --star-gold: #fbbf24;
+            --accent-cyan: #38bdf8;
+            --text-main: #f1f5f9;
+            --text-dim: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: 'Rajdhani', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 24px;
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(7, 9, 19, 0.8) 100%);
+            border-bottom: 1px solid var(--border-glow);
+        }
+
+        .title-block {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .badge-nasa {
+            background: #2563eb;
+            color: #fff;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 4px 8px;
+            border-radius: 4px;
+            letter-spacing: 1.5px;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            letter-spacing: 1.5px;
+        }
+
+        .badge-vibe {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            padding: 4px 10px;
+            border-radius: 4px;
+        }
+
+        .container {
+            flex: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 20px;
+        }
+
+        .sim-view {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .visualizer-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-glow);
+            border-radius: 12px;
+            padding: 16px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .card-header {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            color: var(--accent-cyan);
+            letter-spacing: 1.2px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* SVG Solar Transit Window */
+        .transit-viewport {
+            width: 100%;
+            height: 240px;
+            background: radial-gradient(circle at 50% 50%, #171f38 0%, #080c1a 90%);
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* SVG Star & Planet */
+        svg.transit-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Graph Canvas */
+        #curve-canvas {
+            width: 100%;
+            height: 160px;
+            background: #090e1f;
+            border-radius: 6px;
+            display: block;
+        }
+
+        /* Control Panel */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .control-box {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-glow);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .field-group {
+            margin-bottom: 14px;
+        }
+
+        .field-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dim);
+            margin-bottom: 6px;
+        }
+
+        .field-val {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-cyan);
+        }
+
+        input[type="range"] {
+            width: 100%;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.1);
+            height: 5px;
+            border-radius: 3px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--accent-cyan);
+        }
+
+        select {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid var(--border-glow);
+            color: #fff;
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 8px 10px;
+            border-radius: 6px;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .hack-tip {
+            background: rgba(168, 85, 247, 0.1);
+            border: 1px dashed rgba(168, 85, 247, 0.4);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 12px;
+            color: #d8b4fe;
+            line-height: 1.4;
+        }
+
+        .hack-tip strong {
+            color: #f3e8ff;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px;
+            display: block;
+            margin-bottom: 4px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="title-block">
+            <span class="badge-nasa">KEPLER // TESS</span>
+            <h1>EXOPLANET TRANSIT PHOTOMETRY LAB</h1>
+        </div>
+        <div class="badge-vibe">HACKATHON VISUALIZER PATTERN (SVG + Math Sync)</div>
+    </header>
+
+    <div class="container">
+        <!-- Visuals Column -->
+        <div class="sim-view">
+            <!-- SVG Star Simulation -->
+            <div class="visualizer-card">
+                <div class="card-header">
+                    <span>TELESCOPE VIEW (OPTICAL APERTURE)</span>
+                    <span id="transit-state-tag" style="color: #4ade80;">NO TRANSIT (100% FLUX)</span>
+                </div>
+                <div class="transit-viewport">
+                    <svg class="transit-svg" viewBox="0 0 600 240">
+                        <defs>
+                            <!-- Star Core Glow -->
+                            <radialGradient id="starGradient" cx="50%" cy="50%" r="50%">
+                                <stop offset="0%" stop-color="#fffbeb" stop-opacity="1"/>
+                                <stop offset="40%" stop-color="#fde047" stop-opacity="0.9"/>
+                                <stop offset="80%" stop-color="#f59e0b" stop-opacity="0.7"/>
+                                <stop offset="100%" stop-color="#b45309" stop-opacity="0"/>
+                            </radialGradient>
+                            <!-- Corona Flares -->
+                            <filter id="coronaGlow">
+                                <feGaussianBlur stdDeviation="10" result="coloredBlur"/>
+                                <feMerge>
+                                    <feMergeNode in="coloredBlur"/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                            </filter>
+                        </defs>
+
+                        <!-- Distant Stars Background -->
+                        <g id="bg-starfield"></g>
+
+                        <!-- Target Star -->
+                        <circle id="star-corona" cx="300" cy="120" r="75" fill="#f59e0b" opacity="0.3" filter="url(#coronaGlow)" />
+                        <circle id="star-core" cx="300" cy="120" r="60" fill="url(#starGradient)" />
+
+                        <!-- Planetary Transit Path & Body -->
+                        <ellipse cx="300" cy="120" rx="260" ry="25" stroke="rgba(255,255,255,0.08)" fill="none" stroke-dasharray="3 4"/>
+                        <circle id="planet-body" cx="100" cy="120" r="14" fill="#030712" stroke="#38bdf8" stroke-width="1.5" />
+                        <circle id="planet-shadow" cx="100" cy="120" r="15" fill="none" stroke="rgba(0,0,0,0.5)" />
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Synchronized Light Curve Chart -->
+            <div class="visualizer-card">
+                <div class="card-header">
+                    <span>SYNCHRONIZED LIGHT CURVE (NORMALIZED FLUX VS TIME)</span>
+                    <span style="font-family: 'JetBrains Mono', monospace; color: var(--accent-cyan);">DIP: <span id="txt-dip">0.00%</span></span>
+                </div>
+                <canvas id="curve-canvas"></canvas>
+            </div>
+        </div>
+
+        <!-- Sidebar Settings -->
+        <div class="sidebar">
+            <div class="control-box">
+                <div class="card-header">
+                    <span>OBSERVATION PARAMS</span>
+                </div>
+
+                <div class="field-group">
+                    <div class="field-label">Target Planet Size</div>
+                    <select id="sel-preset">
+                        <option value="18">Jupiter-Sized Gas Giant (Large Transit Dip)</option>
+                        <option value="12" selected>Neptune-Sized Ice Giant (Medium Dip)</option>
+                        <option value="6">Super-Earth / Terrestrial (Tiny Dip 0.05%)</option>
+                    </select>
+                </div>
+
+                <div class="field-group">
+                    <div class="field-label">
+                        <span>Orbital Period Speed</span>
+                        <span class="field-val" id="val-speed">1.0x</span>
+                    </div>
+                    <input type="range" id="param-speed" min="0.3" max="2.5" step="0.1" value="1.0">
+                </div>
+
+                <div class="field-group">
+                    <div class="field-label">
+                        <span>Limb Darkening Coefficient</span>
+                        <span class="field-val" id="val-limb">0.45</span>
+                    </div>
+                    <input type="range" id="param-limb" min="0.1" max="0.8" step="0.05" value="0.45">
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Observed Flux</div>
+                        <div class="stat-value" id="st-flux">1.0000</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Estimated Radius</div>
+                        <div class="stat-value" id="st-radius">3.4 R⊕</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Transit Duration</div>
+                        <div class="stat-value" id="st-dur">3.8 hrs</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Habitability Index</div>
+                        <div class="stat-value" style="color: #4ade80;">0.78 (Opt)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hack-tip">
+                <strong>HACKATHON WINNER TIP</strong>
+                Judges love scientific credibility combined with interactive storytelling. An AI model can generate this full SVG transit physics model in a single prompt.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const planetBody = document.getElementById('planet-body');
+        const planetShadow = document.getElementById('planet-shadow');
+        const starCore = document.getElementById('star-core');
+        const bgStarfield = document.getElementById('bg-starfield');
+        const stateTag = document.getElementById('transit-state-tag');
+        const txtDip = document.getElementById('txt-dip');
+        const stFlux = document.getElementById('st-flux');
+        const stRadius = document.getElementById('st-radius');
+        
+        const canvas = document.getElementById('curve-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Populate starfield
+        for (let i = 0; i < 40; i++) {
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', Math.random() * 600);
+            circle.setAttribute('cy', Math.random() * 240);
+            circle.setAttribute('r', Math.random() * 1.2 + 0.3);
+            circle.setAttribute('fill', '#ffffff');
+            circle.setAttribute('opacity', Math.random() * 0.7 + 0.2);
+            bgStarfield.appendChild(circle);
+        }
+
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth - 32;
+            canvas.height = 160;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        let progress = 0;
+        let planetRadius = 12;
+        let speedMult = 1.0;
+        let limbFactor = 0.45;
+        let fluxHistory = [];
+        const maxHistory = 200;
+
+        document.getElementById('sel-preset').addEventListener('change', (e) => {
+            planetRadius = parseInt(e.target.value);
+            planetBody.setAttribute('r', planetRadius);
+            planetShadow.setAttribute('r', planetRadius + 1);
+            if (planetRadius === 18) stRadius.innerText = "11.2 R⊕";
+            else if (planetRadius === 12) stRadius.innerText = "3.8 R⊕";
+            else stRadius.innerText = "1.4 R⊕";
+        });
+
+        document.getElementById('param-speed').addEventListener('input', (e) => {
+            speedMult = parseFloat(e.target.value);
+            document.getElementById('val-speed').innerText = `${speedMult.toFixed(1)}x`;
+        });
+
+        document.getElementById('param-limb').addEventListener('input', (e) => {
+            limbFactor = parseFloat(e.target.value);
+            document.getElementById('val-limb').innerText = limbFactor.toFixed(2);
+        });
+
+        function animate() {
+            progress = (progress + 0.008 * speedMult) % (Math.PI * 2);
+
+            // Orbit math: ellipse around 300, 120
+            const cx = 300;
+            const cy = 120;
+            const rx = 240;
+            const ry = 20;
+
+            const px = cx + Math.cos(progress) * rx;
+            const py = cy + Math.sin(progress) * ry;
+
+            // Z-index illusion: is it in front of the star?
+            const isFront = Math.sin(progress) > 0;
+
+            planetBody.setAttribute('cx', px);
+            planetBody.setAttribute('cy', py);
+            planetShadow.setAttribute('cx', px);
+            planetShadow.setAttribute('cy', py);
+
+            let flux = 1.0;
+            const starRadius = 60;
+            const distToStar = Math.abs(px - cx);
+
+            if (isFront && distToStar < (starRadius + planetRadius)) {
+                // Transit occurring
+                const overlapRatio = Math.max(0, 1 - (distToStar / (starRadius + planetRadius)));
+                const areaRatio = (planetRadius * planetRadius) / (starRadius * starRadius);
+                const dip = areaRatio * overlapRatio * (1 + (1 - distToStar/starRadius) * limbFactor);
+                flux = Math.max(0.85, 1.0 - dip);
+
+                stateTag.innerText = `TRANSIT ACTIVE (INGRESS/EGRESS)`;
+                stateTag.style.color = '#38bdf8';
+                planetBody.setAttribute('opacity', '1');
+            } else if (!isFront && distToStar < (starRadius - 10)) {
+                // Planet eclipsed behind star
+                planetBody.setAttribute('opacity', '0.1');
+                stateTag.innerText = `OCCULTATION (BEHIND STAR)`;
+                stateTag.style.color = '#a855f7';
+            } else {
+                planetBody.setAttribute('opacity', '1');
+                stateTag.innerText = `OUT OF TRANSIT (100% FLUX)`;
+                stateTag.style.color = '#4ade80';
+            }
+
+            // Light curve history buffer
+            fluxHistory.push(flux);
+            if (fluxHistory.length > maxHistory) fluxHistory.shift();
+
+            // Telemetry
+            stFlux.innerText = flux.toFixed(4);
+            txtDip.innerText = ((1.0 - flux) * 100).toFixed(2) + '%';
+
+            drawLightCurve();
+            requestAnimationFrame(animate);
+        }
+
+        function drawLightCurve() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw grid lines
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+            ctx.lineWidth = 1;
+            
+            // Baseline 1.00
+            const yBase = 35;
+            ctx.beginPath();
+            ctx.moveTo(40, yBase);
+            ctx.lineTo(canvas.width - 20, yBase);
+            ctx.stroke();
+
+            // Label
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '11px JetBrains Mono';
+            ctx.fillText('1.000', 6, yBase + 4);
+
+            // Dip guideline 0.95
+            const yDip = 110;
+            ctx.beginPath();
+            ctx.setLineDash([4, 4]);
+            ctx.moveTo(40, yDip);
+            ctx.lineTo(canvas.width - 20, yDip);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillText('0.950', 6, yDip + 4);
+
+            // Draw light curve path
+            if (fluxHistory.length > 1) {
+                ctx.beginPath();
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = 2.5;
+                ctx.shadowColor = '#0284c7';
+                ctx.shadowBlur = 8;
+
+                const step = (canvas.width - 60) / maxHistory;
+                const startX = 45;
+
+                for (let i = 0; i < fluxHistory.length; i++) {
+                    const x = startX + i * step;
+                    // Map flux (1.0 to 0.90) to canvas y
+                    const f = fluxHistory[i];
+                    const y = yBase + (1.0 - f) * 750;
+
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+                ctx.shadowBlur = 0; // reset
+            }
+        }
+
+        animate();
+    </script>
+</body>
+</html>
